@@ -1,0 +1,2 @@
+{"id": "mine-1", "messages": [{"role": "user", "content": "세 줄로 요약해 줘"}, {"role": "assistant", "content": "네."}, {"role": "user", "content": "이번엔 신제품 소식도 부탁해"}], "answer": "신제품이 공개됐습니다.\n가격은 낮아졌습니다.\n출시는 다음 달입니다.\n사전 예약도 열립니다.", "expect": ["lines"]}
+{"id": "mine-2", "messages": [{"role": "user", "content": "표로 정리해 줘: 사과와 배의 차이"}], "answer": "- 사과는 새콤합니다\n- 배는 시원합니다", "expect": ["shape_table"]}

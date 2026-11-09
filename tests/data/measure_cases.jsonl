@@ -1,0 +1,27 @@
+{"name": "ko_3lines", "text": "하늘은 파랗다.\n풀은 초록색이다.\n물은 젖어 있다.", "expect": {"lines": 3, "sentences": 3}}
+{"name": "ko_nopunct_lines", "text": "회의는 3시에 시작합니다\n자료는 미리 읽어 오세요\n질문은 끝나고 받겠습니다", "expect": {"lines": 3, "sentences": 3}}
+{"name": "ko_decimal", "text": "버전 3.12에서 바뀌었습니다. 가격은 1.5만 원입니다.", "expect": {"sentences": 2}}
+{"name": "code_excluded", "text": "설명은 이렇습니다.\n```python\nprint('a')\nprint('b')\n```\n끝입니다.", "expect": {"lines": 2, "sentences": 2}}
+{"name": "think_excluded", "text": "<think>먼저 생각.\n둘째 생각.</think>\n답은 42입니다.", "expect": {"lines": 1, "sentences": 1}}
+{"name": "list", "text": "- 사과\n- 배\n- 감\n1. 하나\n2) 둘", "expect": {"items": 5, "has_list": true}}
+{"name": "table", "text": "| 이름 | 값 |\n|---|---|\n| a | 1 |\n| b | 2 |", "expect": {"has_table": true, "table_rows": 2}}
+{"name": "chars", "text": "가나다 라마", "expect": {"chars": 6, "chars_no_space": 5}}
+{"name": "paras", "text": "첫 문단입니다.\n\n둘째 문단입니다.\n\n셋째.", "expect": {"paragraphs": 3}}
+{"name": "bold_list", "text": "1. **첫째**: 설명입니다.\n2. **둘째**: 설명입니다.", "expect": {"items": 2, "sentences": 2}}
+{"name": "preamble", "text": "다음은 요약입니다:\n- 하나\n- 둘\n- 셋", "expect": {"lines": 4, "lines_wo_preamble": 3, "items": 3}}
+{"name": "no_preamble_single_line", "text": "요약입니다:", "expect": {"lines": 1, "lines_wo_preamble": 1}}
+{"name": "fullwidth_punct", "text": "今日は晴れです。明日は雨？そうですか！", "expect": {"sentences": 3, "lines": 1}}
+{"name": "abbreviation", "text": "Use e.g. a list vs. a table. It works.", "expect": {"sentences": 2}}
+{"name": "url_dots", "text": "See https://example.com/a.b.c for details. Done.", "expect": {"sentences": 2}}
+{"name": "nested_list", "text": "- 가\n  - 가-1\n  - 가-2\n- 나", "expect": {"items": 4, "lines": 4}}
+{"name": "empty", "text": "", "expect": {"lines": 0, "sentences": 0, "chars": 0, "words": 0, "paragraphs": 0, "has_table": false}}
+{"name": "blank_lines_ignored", "text": "하나.\n\n\n둘.\n", "expect": {"lines": 2, "paragraphs": 2}}
+{"name": "english_words", "text": "One two three. Four five.", "expect": {"words": 5, "sentences": 2, "chars": 25}}
+{"name": "unterminated_fence", "text": "앞입니다.\n```\ncode\nmore code", "expect": {"lines": 1}}
+{"name": "unterminated_think", "text": "답입니다.\n<think>계속 생각 중", "expect": {"lines": 1, "sentences": 1}}
+{"name": "closing_tag_only", "text": "생각 내용\n</think>\n최종 답입니다.", "expect": {"lines": 1}}
+{"name": "table_not_prose", "text": "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n끝.", "expect": {"table_rows": 3, "lines": 5, "chars": 2, "sentences": 1}}
+{"name": "markdown_symbols_not_counted", "text": "**굵게** `코드` _기울임_", "expect": {"chars": 9, "chars_no_space": 7}}
+{"name": "heading_marker_removed", "text": "## 제목\n본문입니다.", "expect": {"chars": 8, "lines": 2}}
+{"name": "ellipsis_sentence", "text": "글쎄요… 잘 모르겠어요.", "expect": {"sentences": 2}}
+{"name": "two_tables", "text": "| a |\n|---|\n| 1 |\n\n| b |\n|---|\n| 2 |\n| 3 |", "expect": {"table_rows": 3, "has_table": true}}

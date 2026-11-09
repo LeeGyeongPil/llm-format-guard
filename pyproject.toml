@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-format-guard"
+version = "0.1.0"
+description = "Catch LLM answers that miss the user's format and length instructions: extract, re-inject, measure, repair once."
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "LeeGyeongPil" }]
+keywords = ["llm", "guardrails", "output-validation", "instruction-following", "korean"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+  "Typing :: Typed",
+]
+dependencies = []
+readme = "README.md"
+
+[project.optional-dependencies]
+kss = ["kss==6.0.6"]
+
+[project.scripts]
+llm-format-guard = "llm_format_guard.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/LeeGyeongPil/llm-format-guard"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+llm_format_guard = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

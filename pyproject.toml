@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-format-guard"
-version = "0.1.0"
+version = "0.1.1"
 description = "Catch LLM answers that miss the user's format and length instructions: extract, re-inject, measure, repair once."
 requires-python = ">=3.10"
 license = "MIT"

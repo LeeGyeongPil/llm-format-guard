@@ -20,7 +20,7 @@
 {"name": "unterminated_fence", "text": "앞입니다.\n```\ncode\nmore code", "expect": {"lines": 1}}
 {"name": "unterminated_think", "text": "답입니다.\n<think>계속 생각 중", "expect": {"lines": 1, "sentences": 1}}
 {"name": "closing_tag_only", "text": "생각 내용\n</think>\n최종 답입니다.", "expect": {"lines": 1}}
-{"name": "table_not_prose", "text": "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n끝.", "expect": {"table_rows": 3, "lines": 5, "chars": 2, "sentences": 1}}
+{"name": "table_not_prose", "text": "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n끝.", "expect": {"table_rows": 3, "lines": 5, "chars": 10, "words": 9, "sentences": 1}}
 {"name": "markdown_symbols_not_counted", "text": "**굵게** `코드` _기울임_", "expect": {"chars": 9, "chars_no_space": 7}}
 {"name": "heading_marker_removed", "text": "## 제목\n본문입니다.", "expect": {"chars": 8, "lines": 2}}
 {"name": "ellipsis_sentence", "text": "글쎄요… 잘 모르겠어요.", "expect": {"sentences": 2}}

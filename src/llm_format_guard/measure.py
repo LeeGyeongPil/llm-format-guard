@@ -61,7 +61,9 @@ def measure(text: str, *, splitter: str = "builtin") -> Metrics:
 
     Fenced code blocks and ``<think>`` style tags are ignored. Characters count the
     visible prose (list markers, ``*_` ` and line breaks removed); table rows are
-    counted separately and not as prose.
+    counted separately. The visible text of table cells (header and data rows, without
+    separator lines and pipes) also counts toward characters and words, but not toward
+    sentences.
     """
     if not isinstance(text, str):
         raise TypeError(f"measure() expects a str, got {type(text).__name__}")
@@ -71,6 +73,16 @@ def measure(text: str, *, splitter: str = "builtin") -> Metrics:
     prose = [l.strip() for i, l in body if i not in table]
     plain = "\n".join(re.sub(r"[*_`]", "", _LEAD_MARK.sub("", l)) for l in prose)
 
+    # table cell text: counted in chars / words, not in sentences
+    cells = [
+        re.sub(r"[*_`]", "", c.strip())
+        for i, l in body
+        if i in table
+        for c in l.strip().strip("|").split("|")
+        if c.strip()
+    ]
+    counted = plain + ("\n" if plain and cells else "") + "\n".join(cells)
+
     count = len(body)
     preamble = bool(body) and count > 1 and body[0][1].rstrip().endswith((":", "："))
     items = sum(1 for i, l in body if i not in table and _LIST_ITEM.match(l))
@@ -79,9 +91,9 @@ def measure(text: str, *, splitter: str = "builtin") -> Metrics:
         lines=count,
         lines_wo_preamble=count - 1 if preamble else count,
         sentences=count_sentences(plain, splitter),
-        chars=len(plain.replace("\n", "")),
-        chars_no_space=len(re.sub(r"\s", "", plain)),
-        words=len(plain.split()),
+        chars=len(counted.replace("\n", "")),
+        chars_no_space=len(re.sub(r"\s", "", counted)),
+        words=len(counted.split()),
         items=items,
         paragraphs=len(paragraphs),
         has_table=bool(seps),

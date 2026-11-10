@@ -19,7 +19,7 @@ from .mock import MockLLM
 from .repair import repair
 from .types import Constraint, GuardResult, Metrics, RepairResult, Violation
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     "Constraint",

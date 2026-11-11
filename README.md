@@ -1,5 +1,7 @@
 # llm-format-guard
 
+**한국어** | [English](README.en.md)
+
 > **English summary** — A small Python library that catches LLM answers which ignore the user's format and length instructions ("in three lines", "table, 200 characters") during a conversation. It extracts the constraints from the chat, re-injects them before the last user message, measures the answer deterministically (Korean and markdown aware), and asks for one repair rewrite that is adopted only when it is strictly better. Zero runtime dependencies, Python 3.10+. Install: `uv add git+https://github.com/LeeGyeongPil/llm-format-guard`.
 
 대화 중에 사용자가 말한 "세 줄로", "200자 이내", "표로" 같은 지시를 모델이 놓치면 **알아채고, 다시 알려 주고, 한 번만 고쳐 쓰게** 하는 파이썬 라이브러리입니다.

@@ -1,30 +1,28 @@
 # llm-format-guard
 
-**한국어** | [English](README.en.md)
+**English** | [한국어](README.ko.md)
 
-> **English summary** — A small Python library that catches LLM answers which ignore the user's format and length instructions ("in three lines", "table, 200 characters") during a conversation. It extracts the constraints from the chat, re-injects them before the last user message, measures the answer deterministically (Korean and markdown aware), and asks for one repair rewrite that is adopted only when it is strictly better. Zero runtime dependencies, Python 3.10+. Install: `uv add git+https://github.com/LeeGyeongPil/llm-format-guard`.
+A small Python library that catches LLM answers which ignore the user's format and length instructions ("in three lines", "within 200 characters", "as a table") during a conversation. It extracts the constraints from the chat, re-injects them before the last user message, measures the answer deterministically (Korean and markdown aware), and asks the model to rewrite the answer exactly once, adopting the rewrite only when it is strictly better. Zero runtime dependencies, Python 3.10+. Install: `uv add git+https://github.com/LeeGyeongPil/llm-format-guard`.
 
-대화 중에 사용자가 말한 "세 줄로", "200자 이내", "표로" 같은 지시를 모델이 놓치면 **알아채고, 다시 알려 주고, 한 번만 고쳐 쓰게** 하는 파이썬 라이브러리입니다.
+![quickstart run screen](docs/images/01-quickstart.png)
 
-![quickstart 실행 화면](docs/images/01-quickstart.png)
+*Figure 1. Output of `examples/quickstart.py`. The model forgot the "in three lines" instruction and answered in 4 lines; the library caught it and fixed it to 3 lines. The model is a practice mock.*
 
-*그림 1. `examples/quickstart.py` 실행 결과. "세 줄로" 지시를 모델이 잊어 4줄로 답했고, 라이브러리가 이를 잡아 3줄로 고쳤습니다. 모델은 연습용 목(mock)입니다.*
-
-## 설치
+## Installation
 
 ```bash
 uv add git+https://github.com/LeeGyeongPil/llm-format-guard
 ```
 
-- 지원 버전: Python 3.10 이상(CI 매트릭스 대상은 3.10·3.12·3.13 이며, 로컬에서는 3.10·3.12 로 테스트 통과를 확인). 런타임 의존성 0개.
-- uv 가 없다면: `curl -LsSf https://astral.sh/uv/install.sh | sh` (설치 안내: https://docs.astral.sh/uv/).
-- 한국어 문장 분리를 더 정확히 하려면 선택 기능 `kss` extra 가 있습니다. 설치는 무겁습니다(실측: 설치 44.4초, 가상환경 558MB, import 6.3초). 꼭 필요할 때만 쓰세요.
-  - 라이브러리로 설치: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip 도 같은 형태)
-  - 레포를 받았다면: `uv sync --extra kss`
-  - 자세한 내용은 [문제 해결](#문제-해결)을 보세요.
-- 아직 PyPI 에는 게시하지 않았습니다. 위처럼 GitHub 주소로 설치합니다.
+- Supported versions: Python 3.10 or later (the CI matrix targets 3.10, 3.12 and 3.13; locally, passing tests were confirmed on 3.10 and 3.12). Zero runtime dependencies.
+- If you do not have uv: `curl -LsSf https://astral.sh/uv/install.sh | sh` (installation guide: https://docs.astral.sh/uv/).
+- For more accurate Korean sentence splitting there is an optional `kss` extra. Installation is heavy (measured: 44.4 s to install, 558 MB virtual environment, 6.3 s to import). Use it only when you really need it.
+  - Install as a library: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip uses the same form)
+  - If you cloned the repo: `uv sync --extra kss`
+  - See [Troubleshooting](#troubleshooting) for details.
+- It has not been published to PyPI yet. Install from the GitHub address as shown above.
 
-레포를 받아서 직접 돌려 보려면:
+To clone the repo and run it yourself:
 
 ```bash
 git clone https://github.com/LeeGyeongPil/llm-format-guard
@@ -32,9 +30,9 @@ cd llm-format-guard
 uv run python examples/quickstart.py
 ```
 
-## 빠르게 시작하기
+## Quick start
 
-사용자가 첫 턴에 "세 줄로"라고 했고, 두 턴 뒤에는 "이것도 부탁해"라고만 합니다. 모델은 보통 이쯤에서 지시를 잊습니다.
+On the first turn the user says "세 줄로" (in three lines), and two turns later only says "이것도 부탁해" (do this one too). Models usually forget the instruction around here.
 
 ```python
 from llm_format_guard import MockLLM, guard
@@ -46,11 +44,13 @@ messages = [
     {"role": "assistant", "content": "비빔밥은 어때요?"},
     {"role": "user", "content": "이것도 부탁해: 회사가 신제품을 공개했다. 가격은 낮아졌다. 출시는 다음 달이다."},
 ]
-result = guard(messages, MockLLM())   # MockLLM 대신 내 모델 호출 함수를 넣는다
+result = guard(messages, MockLLM())   # Put your own model-calling function in place of MockLLM
 print(result.text)
 ```
 
-전체 실행 파일은 [`examples/quickstart.py`](examples/quickstart.py)입니다. 실제로 돌린 출력:
+(The Korean messages say: "From now on, summarize in three lines" / "Okay, I'll summarize in three lines." / "What should we eat for lunch?" / "How about bibimbap?" / "Do this one too: The company unveiled a new product. The price went down. The release is next month.")
+
+The full runnable file is [`examples/quickstart.py`](examples/quickstart.py). Actual output:
 
 ```text
 연습용 목(mock) 모델입니다. 규칙으로 흉내 낸 답이며 실제 모델의 측정값이 아닙니다. (practice mock model - not a measurement of any real model)
@@ -72,36 +72,38 @@ print(result.text)
 RESULT before_lines=4 after_lines=3 violations_after=0 adopted=True
 ```
 
-> **연습용 목(mock) 모델입니다.** `MockLLM` 은 정해진 규칙으로 일부러 지시를 잊는 흉내 모델이며, 실제 모델이 아닙니다. 키와 네트워크 없이 끝까지 돌려 보게 하려는 장치이고, 여기 나오는 수치는 실제 모델의 성능이 아닙니다.
-> 이 레포는 실제 모델(Ollama 등)로는 아직 실행해 보지 않았습니다. [`examples/with_ollama.py`](examples/with_ollama.py)는 작성만 했고 실행 검증은 되지 않았습니다. 실제 모델은 느릴 수 있어 타임아웃을 넉넉히(기본 300초) 잡았습니다.
+(Gloss of the Korean output: "This is a practice mock model; answers are imitated by rules and are not measurements of a real model." / [1] constraint extracted from the conversation: lines at most 3 (said in: user message 1, "세 줄"). [2] block re-inserted just before the last user message: "[active constraints] - write the answer in 3 lines or fewer." [3] the model's first answer: 4 lines; violation: currently 4 lines, target at most 3. [4] one repair with numeric feedback -> adopted. [5] final answer (three filler sentences). "Model calls: 2".)
 
-## 핵심 개념
+> **This is a practice mock model.** `MockLLM` is an imitation model that deliberately forgets instructions by fixed rules; it is not a real model. It is a device to let you run everything end to end without keys or a network, and the figures shown here are not the performance of any real model.
+> This repo has not yet been run against a real model (Ollama etc.). [`examples/with_ollama.py`](examples/with_ollama.py) was only written and its execution has not been verified. Real models can be slow, so the timeout is set generously (300 seconds by default).
+
+## Core concepts
 
 ```mermaid
 flowchart LR
-    A[대화 기록] --> B[제약 추출<br/>detect / Ledger]
-    B --> C[재주입<br/>마지막 사용자 메시지 앞]
-    C --> D[모델 호출]
-    D --> E[측정 + 판정<br/>measure / check]
-    E -->|위반 없음| F[답 그대로]
-    E -->|위반 있음| G[수치 피드백으로<br/>1회 수선]
-    G --> H{위반이 엄격히<br/>줄었나?}
-    H -->|예| I[수선 답 채택]
-    H -->|아니오| F
+    A["Conversation history"] --> B["Constraint extraction<br/>detect / Ledger"]
+    B --> C["Re-injection<br/>before the last user message"]
+    C --> D["Model call"]
+    D --> E["Measure + judge<br/>measure / check"]
+    E -->|"no violation"| F["Answer as is"]
+    E -->|"violation"| G["One repair with<br/>numeric feedback"]
+    G --> H{"Did violations<br/>strictly decrease?"}
+    H -->|"yes"| I["Adopt repaired answer"]
+    H -->|"no"| F
 ```
 
-*그림 2. `guard()` 한 번이 하는 일. 모델 호출은 최대 2회입니다.*
+*Figure 2. What one `guard()` call does. The model is called at most twice.*
 
-1. **제약 추출** — 정규식으로 "3줄 이하", "200자 이내", "표로" 같은 지시를 뽑습니다. 한국어·영어, 아라비아 숫자·"세"·"삼" 같은 수사를 읽습니다. 모호하면 버립니다(오탐보다 놓침이 낫다는 쪽).
-2. **재주입** — 기억하고 있는 제약을 `[활성 제약]` 블록(긍정문)으로 마지막 사용자 메시지 바로 앞에 다시 넣습니다. 오래된 지시를 모델 눈앞에 다시 가져다 놓는 일입니다.
-3. **결정적 측정** — 모델에게 "지켰어?"라고 묻지 않고, 코드가 줄·문장·글자·단어·항목·문단·표 행을 셉니다. 코드블록과 `<think>` 태그는 제외합니다. 표 셀의 보이는 글자는 글자·단어 수에 포함합니다(구분선·파이프 제외, 문장 수는 제외).
-4. **조건부 수선** — 위반이 있으면 "현재 4줄, 목표 3줄 이하" 같은 숫자 피드백으로 딱 한 번 다시 쓰게 하고, `(위반 수, 목표와의 거리)` 가 **엄격히 줄었을 때만** 새 답을 씁니다. 길이는 맞췄지만 표가 목록으로 바뀐 답은 거부됩니다.
+1. **Constraint extraction**: regular expressions pull out instructions such as "3 lines or fewer", "within 200 characters" and "as a table". It reads Korean and English, Arabic numerals and Korean numerals such as "세" and "삼" (both "three"). Ambiguous ones are dropped (it prefers missing a constraint to a false detection).
+2. **Re-injection**: the constraints it remembers are put back, as an `[활성 제약]` ("active constraints") block written in positive sentences, right before the last user message. This brings the old instruction back in front of the model's eyes.
+3. **Deterministic measurement**: it does not ask the model "did you comply?"; code counts lines, sentences, characters, words, items, paragraphs and table rows. Code blocks and `<think>` tags are excluded. The visible characters of table cells count toward the character and word counts (separator rows and pipes excluded; sentence counts excluded).
+4. **Conditional repair**: if there is a violation, the model is asked to rewrite exactly once with numeric feedback such as "currently 4 lines, target 3 or fewer", and the new answer is used **only if `(number of violations, distance to target)` strictly decreased**. An answer that met the length but turned a table into a list is rejected.
 
-더 자세한 설명은 [docs/how-it-works.md](docs/how-it-works.md)에 있습니다.
+More detail is in [docs/how-it-works.md](docs/how-it-works.md) (Korean).
 
-## 단계별로 눈으로 확인하기
+## Seeing it step by step
 
-### 1) 제약 뽑기
+### 1) Extracting constraints
 
 ```bash
 uv run llm-format-guard detect "항목 5개로, 200자 이내로 정리하고 표로 줘"
@@ -113,11 +115,13 @@ chars        le  200    200자 이내
 shape_table  eq  1      표로
 ```
 
-![detect 실행 화면](docs/images/02-detect.png)
+(The input means "Organize it in 5 items, within 200 characters, and give it as a table".)
 
-*그림 3. 한 문장에서 제약 3개를 뽑았습니다. `op` 는 비교 방식(`le` 는 이하)입니다.*
+![detect run screen](docs/images/02-detect.png)
 
-### 2) 답변 길이 재기
+*Figure 3. Three constraints were extracted from one sentence. `op` is the comparison operator (`le` means "at most").*
+
+### 2) Measuring answer length
 
 ```bash
 uv run llm-format-guard measure examples/data/answer.md
@@ -137,11 +141,11 @@ table_rows         3
 has_list           True
 ```
 
-![measure 실행 화면](docs/images/03-measure.png)
+![measure run screen](docs/images/03-measure.png)
 
-*그림 4. 같은 답을 코드가 센 결과. 코드블록과 `<think>` 는 빠집니다. (0.1.1 화면입니다. 표 셀 글자 수가 반영된 현재 값은 위 텍스트 예시를 참고하세요.)*
+*Figure 4. The result of code counting the same answer. Code blocks and `<think>` are left out. (This screenshot is from 0.1.1. For the current values that include the table-cell character count, see the text example above.)*
 
-### 3) 모델 없이 판정만 하기
+### 3) Judging without a model
 
 [`examples/check_only.py`](examples/check_only.py):
 
@@ -161,24 +165,26 @@ over | 현재 6개 항목, 목표 5개 항목 이하
 shape_mismatch | 표 형식이 아님, 목표: 마크다운 표
 ```
 
-![check 실행 화면](docs/images/04-check-only.png)
+(The Korean messages read: "currently 6 items, target 5 items or fewer" and "not a table format, target: markdown table".)
 
-*그림 5. 항목 6개는 초과(`over`), 목록은 표가 아니므로 모양 불일치(`shape_mismatch`)입니다.*
+![check run screen](docs/images/04-check-only.png)
 
-### 4) 여러 대화를 한꺼번에 평가하기
+*Figure 5. Six items exceed the limit (`over`), and a list is not a table, so the shape does not match (`shape_mismatch`).*
 
-배포 전에 모아 둔 대화 기록에서 "형식 지시를 얼마나 지켰나"를 한 번에 봅니다. 입력은 JSONL(한 줄에 JSON 하나)입니다. 아래는 직접 만든 두 줄짜리 [`examples/data/my-chats.jsonl`](examples/data/my-chats.jsonl)입니다. 첫 줄(mine-1)은 세 줄 지시에 네 줄로 답한 예, 둘째 줄(mine-2)은 표 지시에 목록으로 답한 예입니다(그래서 shape_table 위반이 나옵니다).
+### 4) Evaluating many conversations at once
+
+Before deployment, you can see "how well were format instructions followed" across the conversation logs you have collected. The input is JSONL (one JSON object per line). Below is [`examples/data/my-chats.jsonl`](examples/data/my-chats.jsonl), a two-line file made by hand. The first line (mine-1) is an example answering four lines to a three-line instruction, and the second line (mine-2) answers a table instruction with a list (so a shape_table violation appears).
 
 ```json
 {"id": "mine-1", "messages": [{"role": "user", "content": "세 줄로 요약해 줘"}, {"role": "assistant", "content": "네."}, {"role": "user", "content": "이번엔 신제품 소식도 부탁해"}], "answer": "신제품이 공개됐습니다.\n가격은 낮아졌습니다.\n출시는 다음 달입니다.\n사전 예약도 열립니다.", "expect": ["lines"]}
 ```
 
-| 필드 | 필수 | 뜻 |
+| Field | Required | Meaning |
 |---|---|---|
-| `messages` | 필수 | `{"role", "content"}` 목록. 비어 있으면 안 됨 |
-| `answer` | `--mock` 없이는 필수 | 모델이 실제로 한 답(녹화본). `--mock` 이면 연습용 목 모델이 만들어서 불필요 |
-| `expect` | 선택 | 사람이 보기에 이 대화에서 뽑혀야 하는 축 이름(`lines` 등). `detection_rate`(놓치지 않고 뽑은 비율)와 `false_detections`(기대하지 않은 축을 뽑은 횟수) 계산에만 쓰임 |
-| `id`, `source`, `note` | 선택 | 사람이 알아보기 위한 표시 |
+| `messages` | Required | A list of `{"role", "content"}`. Must not be empty |
+| `answer` | Required without `--mock` | The answer the model actually gave (a recording). With `--mock` the practice mock model produces it, so it is unnecessary |
+| `expect` | Optional | Names of the axes a human would say should be extracted from this conversation (`lines`, etc.). Used only to compute `detection_rate` (the share extracted without missing) and `false_detections` (the number of times an unexpected axis was extracted) |
+| `id`, `source`, `note` | Optional | Labels for human readers |
 
 ```bash
 uv run llm-format-guard eval examples/data/my-chats.jsonl
@@ -199,9 +205,9 @@ violations by kind
   recorded: {'over': 1, 'shape_mismatch': 1}
 ```
 
-`--mock` 없이 돌리면 단계는 `recorded`(녹화 답 그대로) 하나입니다. `--json` 을 붙이면 같은 내용이 JSON 으로 나오며 키는 `mock`, `mode`, `conversations`, `with_constraints`, `detection_rate`, `false_detections`, `stages`, `compliance_by_axis`, `violations_by_kind` 입니다.
+Without `--mock` there is a single stage, `recorded` (the recorded answer as is). With `--json` the same content comes out as JSON, with the keys `mock`, `mode`, `conversations`, `with_constraints`, `detection_rate`, `false_detections`, `stages`, `compliance_by_axis` and `violations_by_kind`.
 
-이제 키 없이 세 단계(그대로 / 재주입 / 수선)를 비교하는 연습용 목 모드입니다. 대화 30개짜리 예제 파일입니다.
+Now the keyless practice mock mode, which compares three stages (as is / re-injected / repaired). This is the example file with 30 conversations.
 
 ```bash
 uv run llm-format-guard eval examples/data/conversations.jsonl --mock
@@ -234,40 +240,40 @@ violations by kind
   repaired: {'over': 1}
 ```
 
-(실제 출력 맨 위에는 목 모델 안내 `NOTE:` 한 줄이 먼저 나옵니다.)
+(At the very top of the real output, a one-line `NOTE:` about the mock model comes first.)
 
-![eval 실행 화면](docs/images/05-eval.png)
+![eval run screen](docs/images/05-eval.png)
 
-*그림 6. 세 단계(그대로 / 재주입 / 수선) 준수율. 목 모델 규칙의 산물이라 실제 모델 실측이 아닙니다.*
+*Figure 6. Compliance rate at three stages (as is / re-injected / repaired). It is a product of the mock model's rules, not a measurement of a real model.*
 
-읽는 법: 재주입은 모양(표·목록)을 살리지만 개수는 못 맞추고, 수치 피드백 수선이 개수를 맞춘다는 **경향**만 보여 줍니다. `table_rows 0.00` 은 일부러 만든 시나리오입니다(수선이 표를 목록으로 바꿔 거부되어 원래 5행 유지).
+How to read it: it only shows the **tendency** that re-injection restores the shape (table, list) but cannot fix counts, and that repair with numeric feedback fixes the counts. `table_rows 0.00` is a deliberately built scenario (repair turned the table into a list and was rejected, so the original 5 rows remain).
 
 ## API
 
-공개 이름은 `llm_format_guard` 에서 바로 가져옵니다.
+Public names are imported directly from `llm_format_guard`.
 
-| 이름 | 하는 일 | 주요 인자 | 반환 |
+| Name | What it does | Main arguments | Returns |
 |---|---|---|---|
-| `guard(messages, call_llm, *, ledger=None, repair=True, mode="loose", position="before_last_user", lang="auto")` | 추출 → 재주입 → 호출 → 측정 → 필요 시 1회 수선을 한 번에 | `call_llm(list[dict]) -> str` | `GuardResult` |
-| `detect(text, *, turn=0)` | 메시지 하나에서 제약 추출(정규식, 결정적) | `text: str` | `list[Constraint]` |
-| `Ledger(max_items=5, window=6, scan_edge=300)` | 턴을 가로질러 제약을 기억·만료·렌더 | 메서드 `update(user_text, turn)`, `from_messages(messages)`, `active`(속성), `render(lang)`, `inject(messages, position)` | `Ledger` |
-| `measure(text, *, splitter="builtin")` | 줄·문장·글자·단어·항목·문단·표 측정 | `splitter="kss"` 선택 가능 | `Metrics` |
-| `check(text_or_metrics, constraints, *, mode="loose", approx_tolerance=0.1, lang="ko")` | 위반 목록 반환(빈 리스트 = 모두 만족) | `mode="strict"` 는 원시 계수 | `list[Violation]` |
-| `repair(messages, answer, violations, call_llm, *, constraints, mode, lang)` | 1회 재작성, 개선 시에만 채택 | | `RepairResult` |
-| `MockLLM(script=None)` | 연습용 목 모델(실제 모델 아님) | | 호출 가능 객체 |
-| 데이터 타입 | `Constraint`, `Metrics`, `Violation`, `RepairResult`, `GuardResult` | | 읽기 전용 dataclass |
-| 예외 | `FormatGuardError`(기반), `LLMCallError`(콜백이 문자열이 아닌 값을 돌려줌), `SplitterUnavailable`(kss 미설치) | | |
+| `guard(messages, call_llm, *, ledger=None, repair=True, mode="loose", position="before_last_user", lang="auto")` | Extract → re-inject → call → measure → one repair if needed, all at once | `call_llm(list[dict]) -> str` | `GuardResult` |
+| `detect(text, *, turn=0)` | Extracts constraints from one message (regex, deterministic) | `text: str` | `list[Constraint]` |
+| `Ledger(max_items=5, window=6, scan_edge=300)` | Remembers, expires and renders constraints across turns | Methods `update(user_text, turn)`, `from_messages(messages)`, `active` (property), `render(lang)`, `inject(messages, position)` | `Ledger` |
+| `measure(text, *, splitter="builtin")` | Measures lines, sentences, characters, words, items, paragraphs, tables | `splitter="kss"` optional | `Metrics` |
+| `check(text_or_metrics, constraints, *, mode="loose", approx_tolerance=0.1, lang="ko")` | Returns the list of violations (empty list = all satisfied) | `mode="strict"` uses raw counts | `list[Violation]` |
+| `repair(messages, answer, violations, call_llm, *, constraints, mode, lang)` | One rewrite, adopted only if it improves | | `RepairResult` |
+| `MockLLM(script=None)` | Practice mock model (not a real model) | | Callable object |
+| Data types | `Constraint`, `Metrics`, `Violation`, `RepairResult`, `GuardResult` | | Read-only dataclasses |
+| Exceptions | `FormatGuardError` (base), `LLMCallError` (the callback returned a non-string value), `SplitterUnavailable` (kss not installed) | | |
 
-- 제약 축(`Constraint.axis`): `lines`, `sentences`, `chars`, `chars_no_space`, `words`, `items`, `paragraphs`, `table_rows`, `shape_table`, `shape_list`.
-- 비교 방식(`op`): `le`(이하) `lt`(미만) `ge`(이상) `gt`(초과) `eq`(정확히) `approx`(내외, 기본 ±10%).
-- `GuardResult` 필드: `text`(최종 답), `original`, `constraints`, `violations_before`, `violations_after`, `adopted`, `llm_calls`, `injected`, `repair_reason`, `messages_sent`.
-- 터미널 명령: `llm-format-guard detect | measure | eval` (`--json` 지원, `eval` 은 `--mock`·`--mode loose|strict`).
+- Constraint axes (`Constraint.axis`): `lines`, `sentences`, `chars`, `chars_no_space`, `words`, `items`, `paragraphs`, `table_rows`, `shape_table`, `shape_list`.
+- Comparison operators (`op`): `le` (at most), `lt` (less than), `ge` (at least), `gt` (more than), `eq` (exactly), `approx` (around, ±10% by default).
+- `GuardResult` fields: `text` (final answer), `original`, `constraints`, `violations_before`, `violations_after`, `adopted`, `llm_calls`, `injected`, `repair_reason`, `messages_sent`.
+- Terminal commands: `llm-format-guard detect | measure | eval` (`--json` supported; `eval` takes `--mock` and `--mode loose|strict`).
 
-## 사용 예
+## Usage examples
 
-### 내 모델 연결하기
+### Connecting your own model
 
-`call_llm` 은 "메시지 목록을 받아 답변 문자열을 돌려주는 함수"면 무엇이든 됩니다. OpenAI 호환 서버(예: 로컬 Ollama)용 예제는 [`examples/with_ollama.py`](examples/with_ollama.py)입니다. 환경변수는 `.env.example` 을 보세요. 설정 없이 실행하면 안내 문구와 함께 종료됩니다.
+`call_llm` can be any function that "takes a message list and returns the answer string". The example for OpenAI-compatible servers (for example a local Ollama) is [`examples/with_ollama.py`](examples/with_ollama.py). For the environment variables, see `.env.example`. If run without configuration, it exits with a guidance message.
 
 ```bash
 uv run python examples/with_ollama.py
@@ -276,11 +282,11 @@ uv run python examples/with_ollama.py
 Set LFG_BASE_URL and LFG_MODEL first (see .env.example). For a no-key demo run examples/quickstart.py instead.
 ```
 
-![환경변수 없이 실행한 화면](docs/images/06-missing-env.png)
+![screen when run without environment variables](docs/images/06-missing-env.png)
 
-*그림 7. 의도한 안내 화면입니다(종료 코드 1). 실제 모델 호출은 검증되지 않았습니다.*
+*Figure 7. This is the intended guidance screen (exit code 1). Calls to a real model have not been verified.*
 
-### 제약 장부만 쓰기
+### Using only the constraint ledger
 
 [`examples/ledger_demo.py`](examples/ledger_demo.py):
 
@@ -302,29 +308,31 @@ print(repr(ledger.render()), len(ledger.active))
 '' 0
 ```
 
-"길게 써도 돼" 같은 해제 표현이 나오면 해당 제약이 사라집니다. 같은 축의 새 지시는 옛 지시를 덮어씁니다(최신 우선).
+(The inputs mean "Summarize in three lines", "What should we eat for lunch?" and "Now you may write long".)
 
-## 설정과 기본 동작
+When a release phrase such as "길게 써도 돼" ("you may write long") appears, the corresponding constraint disappears. A new instruction on the same axis overwrites the old one (latest wins).
 
-| 항목 | 기본값 | 설명 |
+## Settings and default behavior
+
+| Item | Default | Description |
 |---|---|---|
-| `mode` | `loose` | 머리말 한 줄("다음은 요약입니다:")은 봐줍니다. `strict` 는 원시 계수 |
-| `Ledger(window=6)` | 6 | 최근 사용자 6턴 안의 제약만 유효 |
-| `Ledger(max_items=5)` | 5 | 동시에 유지하는 제약 상한. 0 이면 재주입 끈다 |
-| `Ledger(scan_edge=300)` | 300 | 1200자 넘는 긴 메시지(붙여 넣은 기사)는 앞뒤 300자만 읽어 오탐을 막음 |
-| "세 줄로" | 상한(`le`) | "정확히/딱"이 붙을 때만 `eq` |
-| `repair=False` | | 재주입과 측정만 하고 수선은 건너뜀 |
-| `position` | `before_last_user` | 제약 블록을 넣는 위치. 아래 표 참고 |
+| `mode` | `loose` | A one-line preamble ("다음은 요약입니다:", "Here is the summary:") is tolerated. `strict` uses raw counts |
+| `Ledger(window=6)` | 6 | Only constraints within the last 6 user turns are valid |
+| `Ledger(max_items=5)` | 5 | Upper limit of constraints held at once. 0 turns off re-injection |
+| `Ledger(scan_edge=300)` | 300 | For long messages over 1200 characters (a pasted article), only the first and last 300 characters are read to prevent false detections |
+| "세 줄로" ("in three lines") | Upper bound (`le`) | Becomes `eq` only when "exactly/just" is attached |
+| `repair=False` | | Only re-injects and measures; skips repair |
+| `position` | `before_last_user` | Where the constraint block is placed. See the table below |
 
-### 주입 위치(`position`) 고르기
+### Choosing the injection position (`position`)
 
-| 값 | 넣는 방식 | 이럴 때 |
+| Value | How it is inserted | When to use |
 |---|---|---|
-| `before_last_user` (기본) | 마지막 사용자 메시지 바로 앞에 `system` 메시지를 끼움 | OpenAI 호환 API, Ollama 처럼 대화 중간의 `system` 메시지를 받는 곳 |
-| `system_end` | 첫 `system` 메시지 끝에 덧붙임(없으면 맨 앞에 새로 만듦) | 중간 `system` 메시지를 거부하거나, `system` 을 별도 인자로 받는 API |
-| `in_last_user` | 마지막 사용자 메시지 끝에 덧붙임 | `system` 역할이 아예 없는 API |
+| `before_last_user` (default) | Inserts a `system` message right before the last user message | Places that accept a mid-conversation `system` message, such as OpenAI-compatible APIs and Ollama |
+| `system_end` | Appends to the end of the first `system` message (creates a new one at the very start if there is none) | APIs that reject mid-conversation `system` messages or take `system` as a separate argument |
+| `in_last_user` | Appends to the end of the last user message | APIs with no `system` role at all |
 
-기본값을 그대로 보냈다가 요청이 거부되면 `system_end` 나 `in_last_user` 로 바꾸세요. 실제로 보낸 목록은 `GuardResult.messages_sent` 로 확인합니다. 같은 대화에 세 값을 적용해 본 역할 순서입니다.
+If a request is rejected after sending with the default, switch to `system_end` or `in_last_user`. Check what was actually sent with `GuardResult.messages_sent`. Here is the role order from applying the three values to the same conversation.
 
 ```text
 before_last_user ['system', 'user', 'assistant', 'system', 'user']
@@ -332,48 +340,48 @@ system_end ['system', 'user', 'assistant', 'user']
 in_last_user ['system', 'user', 'assistant', 'user']
 ```
 
-(`system_end` 와 `in_last_user` 는 역할 순서가 같고, 덧붙는 내용 위치만 다릅니다.)
+(`system_end` and `in_last_user` have the same role order; only where the content is appended differs.)
 
-## 언제 쓰나
+## When to use it
 
-- 대화 중 사용자가 말한 줄 수·글자 수·표 같은 자유 텍스트 형식 지시를 모델이 지키게 하고 싶을 때 쓰세요.
-- 한국어 답변의 길이를 의존성 없이 재고 싶을 때도 맞습니다.
-- JSON·Pydantic 구조화 출력이 목적이면 [Instructor](https://python.useinstructor.com/)를 보세요.
-- 범용 검증기와 재시도 프레임워크가 필요하면 [Guardrails AI](https://www.guardrailsai.com/docs)를 보세요.
-- 오프라인 벤치마크 채점이 목적이면 [IFEval](https://github.com/google-research/google-research/tree/master/instruction_following_eval)을 보세요.
+- Use it when you want the model to obey free-text format instructions the user gave during a conversation, such as line count, character count or a table.
+- It also fits when you want to measure the length of Korean answers with no dependencies.
+- If your goal is JSON or Pydantic structured output, see [Instructor](https://python.useinstructor.com/).
+- If you need a general-purpose validator and retry framework, see [Guardrails AI](https://www.guardrailsai.com/docs).
+- If your goal is offline benchmark scoring, see [IFEval](https://github.com/google-research/google-research/tree/master/instruction_following_eval).
 
-## 버전·호환성
+## Versions and compatibility
 
-- 유의적 버전(SemVer)을 따릅니다. 0.x 동안은 마이너 버전에서 API 가 바뀔 수 있고, 바뀌면 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
-- 현재 `0.1.2`. 한국어·영어 지시만 읽습니다.
+- Follows Semantic Versioning (SemVer). During 0.x the API may change in minor versions, and any change is recorded in [CHANGELOG.md](CHANGELOG.md).
+- Currently `0.1.2`. It reads Korean and English instructions only.
 
-## 한계와 로드맵
+## Limitations and roadmap
 
-한계(0.1.2):
-- 지시 추출은 정규식이라 놓치는 표현이 있습니다. 모호한 표현은 일부러 버립니다("항목 5개"처럼 명사가 붙은 것만 잡고, "첫 3줄만 봐 줘"처럼 자료의 분량을 말한 문장은 제약으로 보지 않습니다).
-- 범위 지시 `3~5줄` 같은 물결표 표기는 상한(5줄 이하)만 읽고 하한은 버립니다. "세 줄 이상 다섯 줄 이하"처럼 풀어 쓴 범위는 하한·상한 두 개로 잡습니다.
-- 줄마다 적용되는 복합 지시("각 줄 30자")는 버립니다.
-- 스트리밍 응답은 지원하지 않습니다(완성된 문자열만 받습니다).
-- 실제 모델로는 실행해 보지 않았습니다. 평가 수치는 목 모델과 직접 쓴 녹화 답변 기준입니다.
-- 목 없이 같은 파일을 직접 쓴 녹화 답변으로 측정하면(`eval` 에서 `--mock` 제외) `recorded 0.48` 이 나왔습니다.
+Limitations (0.1.2):
+- Instruction extraction uses regular expressions, so some phrasings are missed. Ambiguous phrasing is dropped on purpose (only things with a noun attached, like "항목 5개" ("5 items"), are caught; a sentence about the size of the material, like "첫 3줄만 봐 줘" ("just look at the first 3 lines"), is not treated as a constraint).
+- For range instructions written with a tilde, such as `3~5줄` (3-5 lines), only the upper bound (5 lines or fewer) is read and the lower bound is dropped. A range spelled out as "세 줄 이상 다섯 줄 이하" ("at least three and at most five lines") is captured as two bounds, lower and upper.
+- Compound instructions applied per line ("각 줄 30자", "30 characters per line") are dropped.
+- Streaming responses are not supported (only complete strings are accepted).
+- It has not been run against a real model. Evaluation figures are based on the mock model and hand-written recorded answers.
+- Measuring the same file with hand-written recorded answers, without the mock (`eval` without `--mock`), gave `recorded 0.48`.
 
-로드맵(예정이며 약속이 아닙니다):
-- 0.2.0: `guard_stream`(스트림 처리), OpenAI 호환 어댑터, 실제 모델 녹화 답변, 선택적 LLM 추출기
-- 0.3.0: 항목별 복합 제약, 범위 지시 `3~5줄`, 제목 개수, PyPI 게시 준비
+Roadmap (planned, not a promise):
+- 0.2.0: `guard_stream` (stream handling), an OpenAI-compatible adapter, recorded answers from real models, an optional LLM extractor
+- 0.3.0: per-item compound constraints, range instructions like `3~5줄`, heading counts, PyPI publishing preparation
 
-## 문제 해결
+## Troubleshooting
 
-| 증상 | 원인 | 해결 |
+| Symptom | Cause | Fix |
 |---|---|---|
-| `LLMCallError: call_llm must return the answer as a str` | 콜백이 응답 객체 전체를 돌려줌 | `completion.choices[0].message.content` 처럼 문자열만 반환 |
-| `SplitterUnavailable` (메시지: `splitter="kss" needs the optional kss package ...`) | `measure(..., splitter="kss")` 를 썼는데 kss 가 없음 | 라이브러리로 설치했다면 `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"`, 레포에서는 `uv sync --extra kss` |
-| `ValueError: position must be one of ...` / API 가 중간 `system` 메시지를 거부 | `position` 값 오타, 또는 공급자가 중간 `system` 을 못 받음 | [주입 위치](#주입-위치position-고르기) 표에서 `system_end` 나 `in_last_user` 선택 |
-| 마침표 없는 한 줄 여러 문장이 1문장으로 셈 | 내장 분리기는 줄 단위로는 세지만 마침표 없는 문장은 못 나눔 | `kss` 선택 기능 사용 |
-| 패키지 폴더 안에서 `python` 을 직접 실행하면 오류 | 패키지의 `types.py` 가 표준 `types` 를 가림 | 항상 레포 루트에서 실행 |
-| 표 답변인데 글자 수 위반이 나옴 | 표 셀의 보이는 글자도 글자 수에 포함됨(0.1.2부터) | 길이 제약을 표 크기에 맞게 조정하거나 표 없이 요청 |
-| 제약이 안 잡힘 | 표현이 정규식 목록에 없거나 모호함 | `uv run llm-format-guard detect "<문장>"` 으로 확인 후 이슈로 알려 주세요 |
+| `LLMCallError: call_llm must return the answer as a str` | The callback returned the whole response object | Return only the string, e.g. `completion.choices[0].message.content` |
+| `SplitterUnavailable` (message: `splitter="kss" needs the optional kss package ...`) | `measure(..., splitter="kss")` was used but kss is missing | If installed as a library, `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"`; in the repo, `uv sync --extra kss` |
+| `ValueError: position must be one of ...` / the API rejects a mid-conversation `system` message | A typo in the `position` value, or the provider cannot accept a mid-conversation `system` | Choose `system_end` or `in_last_user` from the [injection position](#choosing-the-injection-position-position) table |
+| Several sentences on one line without periods count as 1 sentence | The built-in splitter counts per line but cannot split sentences without periods | Use the optional `kss` feature |
+| Running `python` directly inside the package folder gives an error | The package's `types.py` shadows the standard `types` | Always run from the repo root |
+| A violation about character count appears for a table answer | The visible characters of table cells also count toward the character count (since 0.1.2) | Adjust the length constraint to fit the table size, or ask without a table |
+| A constraint is not picked up | The phrasing is not in the regex list, or is ambiguous | Check with `uv run llm-format-guard detect "<sentence>"` and then report it as an issue |
 
-## 개발·기여
+## Development and contributing
 
 ```bash
 uv sync
@@ -382,16 +390,16 @@ uv run python examples/quickstart.py
 uv run llm-format-guard eval examples/data/conversations.jsonl --mock
 ```
 
-테스트는 표준 `unittest` 클래스로 작성돼 `python -m unittest discover -s tests` 로도 돌아갑니다. 보안 문제는 [SECURITY.md](SECURITY.md)를 보세요.
+The tests are written as standard `unittest` classes, so they also run with `python -m unittest discover -s tests`. For security issues, see [SECURITY.md](SECURITY.md).
 
-## 더 알아보기
+## Learn more
 
-- IFEval 논문(검증 가능한 지시): https://arxiv.org/abs/2311.07911 (확인 2026-11-09)
-- IFEval 코드: https://github.com/google-research/google-research/tree/master/instruction_following_eval
-- Instructor 의 재시도 방식: https://python.useinstructor.com/
+- IFEval paper (verifiable instructions): https://arxiv.org/abs/2311.07911 (checked 2026-11-09)
+- IFEval code: https://github.com/google-research/google-research/tree/master/instruction_following_eval
+- Instructor's retry approach: https://python.useinstructor.com/
 - Guardrails AI: https://www.guardrailsai.com/docs
-- kss(한국어 문장 분리기): https://github.com/hyunwoongko/kss
+- kss (Korean sentence splitter): https://github.com/hyunwoongko/kss
 
-## 라이선스
+## License
 
-MIT. [LICENSE](LICENSE) 참고.
+MIT. See [LICENSE](LICENSE).

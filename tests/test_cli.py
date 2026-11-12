@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import _lang  # noqa: F401  (pins the output language to en)
 from llm_format_guard.cli import main
 
 ROOT = Path(__file__).resolve().parents[1]

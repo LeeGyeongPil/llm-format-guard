@@ -49,7 +49,8 @@ def split_kss(text: str) -> List[str]:
             'Install it with: pip install "llm-format-guard[kss] @ '
             'git+https://github.com/LeeGyeongPil/llm-format-guard" '
             "(or, in a clone: uv sync --extra kss). "
-            'Once the package is published to PyPI: pip install "llm-format-guard[kss]"'
+            'Once the package is published to PyPI: pip install "llm-format-guard[kss]"',
+            code="kss_missing",
         ) from exc
     result = kss.split_sentences(text, backend="pecab")
     return [s for s in result if s.strip()]

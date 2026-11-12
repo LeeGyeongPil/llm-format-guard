@@ -33,14 +33,16 @@ def load_conversations(path: str) -> List[Dict[str, Any]]:
             try:
                 row = json.loads(raw)
             except json.JSONDecodeError as exc:
-                raise FormatGuardError(f"{path}:{no}: invalid JSON ({exc.msg}). One JSON object per line.") from exc
+                raise FormatGuardError(f"{path}:{no}: invalid JSON ({exc.msg}). One JSON object per line.",
+                                       code="invalid_json", path=path, line=no, detail=exc.msg) from exc
             msgs = row.get("messages") if isinstance(row, dict) else None
             if not (isinstance(msgs, list) and msgs and all(isinstance(m, dict) and "role" in m for m in msgs)):
                 raise FormatGuardError(
-                    f'{path}:{no}: needs "messages": a non-empty list of {{"role": ..., "content": ...}}')
+                    f'{path}:{no}: needs "messages": a non-empty list of {{"role": ..., "content": ...}}',
+                    code="bad_messages", path=path, line=no)
             rows.append(row)
     if not rows:
-        raise FormatGuardError(f"{path}: no conversations found")
+        raise FormatGuardError(f"{path}: no conversations found", code="no_conversations", path=path)
     return rows
 
 
@@ -84,7 +86,8 @@ def evaluate(conversations: Sequence[Dict[str, Any]], *, mock: bool = False, mod
         else:
             if not isinstance(conv.get("answer"), str):
                 raise FormatGuardError(
-                    f'conversation {conv.get("id", i + 1)!r} has no "answer"; add the recorded reply or use --mock')
+                    f'conversation {conv.get("id", i + 1)!r} has no "answer"; add the recorded reply or use --mock',
+                    code="no_answer", conv_id=repr(conv.get("id", i + 1)))
             answers["recorded"] = conv["answer"]
         for stage, text in answers.items():
             violations = check(text, active, mode=mode)

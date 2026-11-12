@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-11-12
+
+### Added
+- Command line output language: English or Korean for help (including `-h` and `--version`), table headers (aligned by display width), the `eval` text report, `NOTE:`/`error:` prefixes and the CLI error sentences (missing or invalid conversations file, missing `messages` or `answer`, missing file, missing kss). Chosen by `--lang en|ko`, then `LLM_FORMAT_GUARD_LANG`, then `LC_ALL`, `LC_MESSAGES`, `LANG` (a value starting with `ko` is Korean, everything else English).
+- `FormatGuardError` accepts optional keyword-only `code` and `params`; `str(exc)` is unchanged.
+
+### Changed
+- Text output now follows the shell language when `LANG` is Korean. Scripts that parse the text output should pass `--lang en` or set `LLM_FORMAT_GUARD_LANG=en`.
+
+### Unchanged
+- `--json` output, rule ids, exit codes, the library API and exception messages.
+
 ## [0.1.2] - 2026-11-10
 
 ### Fixed

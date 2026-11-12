@@ -17,10 +17,10 @@ uv add git+https://github.com/LeeGyeongPil/llm-format-guard
 - Supported versions: Python 3.10 or later (the CI matrix targets 3.10, 3.12 and 3.13; locally, passing tests were confirmed on 3.10 and 3.12). Zero runtime dependencies.
 - If you do not have uv: `curl -LsSf https://astral.sh/uv/install.sh | sh` (installation guide: https://docs.astral.sh/uv/).
 - For more accurate Korean sentence splitting there is an optional `kss` extra. Installation is heavy (measured: 44.4 s to install, 558 MB virtual environment, 6.3 s to import). Use it only when you really need it.
-  - Install as a library: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip uses the same form)
+  - Install as a library: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip uses the same form; from PyPI use the shorter form below)
   - If you cloned the repo: `uv sync --extra kss`
   - See [Troubleshooting](#troubleshooting) for details.
-- It has not been published to PyPI yet. Install from the GitHub address as shown above.
+- It is also published on PyPI: `uv add llm-format-guard` (or `pip install llm-format-guard`); with the extra: `uv add "llm-format-guard[kss]"`. The GitHub address above installs the latest repository state.
 
 To clone the repo and run it yourself:
 
@@ -106,7 +106,7 @@ More detail is in [docs/how-it-works.md](docs/how-it-works.md) (Korean).
 ### 1) Extracting constraints
 
 ```bash
-uv run llm-format-guard detect "항목 5개로, 200자 이내로 정리하고 표로 줘"
+uv run llm-format-guard --lang en detect "항목 5개로, 200자 이내로 정리하고 표로 줘"
 ```
 ```text
 axis         op  value  text
@@ -124,7 +124,7 @@ shape_table  eq  1      표로
 ### 2) Measuring answer length
 
 ```bash
-uv run llm-format-guard measure examples/data/answer.md
+uv run llm-format-guard --lang en measure examples/data/answer.md
 ```
 ```text
 metric             value
@@ -143,7 +143,7 @@ has_list           True
 
 ![measure run screen](docs/images/03-measure.png)
 
-*Figure 4. The result of code counting the same answer. Code blocks and `<think>` are left out. (This screenshot is from 0.1.1. For the current values that include the table-cell character count, see the text example above.)*
+*Figure 4. The result of code counting the same answer. Code blocks and `<think>` are left out.*
 
 ### 3) Judging without a model
 
@@ -187,7 +187,7 @@ Before deployment, you can see "how well were format instructions followed" acro
 | `id`, `source`, `note` | Optional | Labels for human readers |
 
 ```bash
-uv run llm-format-guard eval examples/data/my-chats.jsonl
+uv run llm-format-guard --lang en eval examples/data/my-chats.jsonl
 ```
 ```text
 conversations=2 with_constraints=2 detection_rate=1.0 false_detections=0 mode=loose
@@ -210,7 +210,7 @@ Without `--mock` there is a single stage, `recorded` (the recorded answer as is)
 Now the keyless practice mock mode, which compares three stages (as is / re-injected / repaired). This is the example file with 30 conversations.
 
 ```bash
-uv run llm-format-guard eval examples/data/conversations.jsonl --mock
+uv run llm-format-guard --lang en eval examples/data/conversations.jsonl --mock
 ```
 ```text
 conversations=30 with_constraints=23 detection_rate=1.0 false_detections=0 mode=loose
@@ -312,6 +312,18 @@ print(repr(ledger.render()), len(ledger.active))
 
 When a release phrase such as "길게 써도 돼" ("you may write long") appears, the corresponding constraint disappears. A new instruction on the same axis overwrites the old one (latest wins).
 
+## Output language
+
+The human-readable output of the command line (help, table headers, the `eval` report, error prefixes) is available in English and Korean. The language is the first one found in this order:
+
+1. `--lang en|ko` (top-level option, for example `llm-format-guard --lang ko detect "안녕"`)
+2. environment variable `LLM_FORMAT_GUARD_LANG`
+3. `LC_ALL`, then `LC_MESSAGES`, then `LANG`
+
+A value starting with `ko` (such as `ko_KR.UTF-8`) means Korean; anything else, an empty value, or nothing set means English. To keep text output stable for scripts that grep it, pin it with `--lang en` or `LLM_FORMAT_GUARD_LANG=en`.
+
+`--json` output (keys, values, rule ids, exit codes) is identical in every language. The library API and its exception messages are not translated, and the scripts in `examples/` are library usage samples, so they are not translated either.
+
 ## Settings and default behavior
 
 | Item | Default | Description |
@@ -353,11 +365,11 @@ in_last_user ['system', 'user', 'assistant', 'user']
 ## Versions and compatibility
 
 - Follows Semantic Versioning (SemVer). During 0.x the API may change in minor versions, and any change is recorded in [CHANGELOG.md](CHANGELOG.md).
-- Currently `0.1.2`. It reads Korean and English instructions only.
+- Currently `0.2.0`. It reads Korean and English instructions only.
 
 ## Limitations and roadmap
 
-Limitations (0.1.2):
+Limitations (0.2.0):
 - Instruction extraction uses regular expressions, so some phrasings are missed. Ambiguous phrasing is dropped on purpose (only things with a noun attached, like "항목 5개" ("5 items"), are caught; a sentence about the size of the material, like "첫 3줄만 봐 줘" ("just look at the first 3 lines"), is not treated as a constraint).
 - For range instructions written with a tilde, such as `3~5줄` (3-5 lines), only the upper bound (5 lines or fewer) is read and the lower bound is dropped. A range spelled out as "세 줄 이상 다섯 줄 이하" ("at least three and at most five lines") is captured as two bounds, lower and upper.
 - Compound instructions applied per line ("각 줄 30자", "30 characters per line") are dropped.
@@ -366,8 +378,8 @@ Limitations (0.1.2):
 - Measuring the same file with hand-written recorded answers, without the mock (`eval` without `--mock`), gave `recorded 0.48`.
 
 Roadmap (planned, not a promise):
-- 0.2.0: `guard_stream` (stream handling), an OpenAI-compatible adapter, recorded answers from real models, an optional LLM extractor
-- 0.3.0: per-item compound constraints, range instructions like `3~5줄`, heading counts, PyPI publishing preparation
+- 0.3.0: `guard_stream` (stream handling), an OpenAI-compatible adapter, recorded answers from real models, an optional LLM extractor
+- 0.4.0: per-item compound constraints, range instructions like `3~5줄`, heading counts
 
 ## Troubleshooting
 
@@ -387,7 +399,7 @@ Roadmap (planned, not a promise):
 uv sync
 uv run pytest -q
 uv run python examples/quickstart.py
-uv run llm-format-guard eval examples/data/conversations.jsonl --mock
+uv run llm-format-guard --lang en eval examples/data/conversations.jsonl --mock
 ```
 
 The tests are written as standard `unittest` classes, so they also run with `python -m unittest discover -s tests`. For security issues, see [SECURITY.md](SECURITY.md).

@@ -17,10 +17,10 @@ uv add git+https://github.com/LeeGyeongPil/llm-format-guard
 - 지원 버전: Python 3.10 이상(CI 매트릭스 대상은 3.10·3.12·3.13 이며, 로컬에서는 3.10·3.12 로 테스트 통과를 확인). 런타임 의존성 0개.
 - uv 가 없다면: `curl -LsSf https://astral.sh/uv/install.sh | sh` (설치 안내: https://docs.astral.sh/uv/).
 - 한국어 문장 분리를 더 정확히 하려면 선택 기능 `kss` extra 가 있습니다. 설치는 무겁습니다(실측: 설치 44.4초, 가상환경 558MB, import 6.3초). 꼭 필요할 때만 쓰세요.
-  - 라이브러리로 설치: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip 도 같은 형태)
+  - 라이브러리로 설치: `uv add "llm-format-guard[kss] @ git+https://github.com/LeeGyeongPil/llm-format-guard"` (pip 도 같은 형태, PyPI 에서는 아래 짧은 형태)
   - 레포를 받았다면: `uv sync --extra kss`
   - 자세한 내용은 [문제 해결](#문제-해결)을 보세요.
-- 아직 PyPI 에는 게시하지 않았습니다. 위처럼 GitHub 주소로 설치합니다.
+- PyPI 에도 게시되어 있습니다: `uv add llm-format-guard` (또는 `pip install llm-format-guard`), extra 포함은 `uv add "llm-format-guard[kss]"`. 위 GitHub 주소는 레포의 최신 상태를 설치합니다.
 
 레포를 받아서 직접 돌려 보려면:
 
@@ -102,26 +102,26 @@ flowchart LR
 ### 1) 제약 뽑기
 
 ```bash
-uv run llm-format-guard detect "항목 5개로, 200자 이내로 정리하고 표로 줘"
+uv run llm-format-guard --lang ko detect "항목 5개로, 200자 이내로 정리하고 표로 줘"
 ```
 ```text
-axis         op  value  text
-items        le  5      항목 5개
-chars        le  200    200자 이내
-shape_table  eq  1      표로
+축           연산  값   원문
+items        le    5    항목 5개
+chars        le    200  200자 이내
+shape_table  eq    1    표로
 ```
 
-![detect 실행 화면](docs/images/02-detect.png)
+![detect 실행 화면](docs/images/02-detect.ko.png)
 
 *그림 3. 한 문장에서 제약 3개를 뽑았습니다. `op` 는 비교 방식(`le` 는 이하)입니다.*
 
 ### 2) 답변 길이 재기
 
 ```bash
-uv run llm-format-guard measure examples/data/answer.md
+uv run llm-format-guard --lang ko measure examples/data/answer.md
 ```
 ```text
-metric             value
+지표               값
 lines              8
 lines_wo_preamble  7
 sentences          5
@@ -135,9 +135,9 @@ table_rows         3
 has_list           True
 ```
 
-![measure 실행 화면](docs/images/03-measure.png)
+![measure 실행 화면](docs/images/03-measure.ko.png)
 
-*그림 4. 같은 답을 코드가 센 결과. 코드블록과 `<think>` 는 빠집니다. (0.1.1 화면입니다. 표 셀 글자 수가 반영된 현재 값은 위 텍스트 예시를 참고하세요.)*
+*그림 4. 같은 답을 코드가 센 결과. 코드블록과 `<think>` 는 빠집니다.*
 
 ### 3) 모델 없이 판정만 하기
 
@@ -179,21 +179,21 @@ shape_mismatch | 표 형식이 아님, 목표: 마크다운 표
 | `id`, `source`, `note` | 선택 | 사람이 알아보기 위한 표시 |
 
 ```bash
-uv run llm-format-guard eval examples/data/my-chats.jsonl
+uv run llm-format-guard --lang ko eval examples/data/my-chats.jsonl
 ```
 ```text
-conversations=2 with_constraints=2 detection_rate=1.0 false_detections=0 mode=loose
+대화 수=2 제약 있는 대화=2 탐지율=1.0 오탐=0 모드=loose
 
-compliance (share of conversations with no violation)
-stage     rate
+준수율 (위반이 없는 대화의 비율)
+단계      비율
 recorded  0.00
 
-compliance by axis
-axis         recorded
+축별 준수율
+축           recorded
 lines        0.00
 shape_table  0.00
 
-violations by kind
+종류별 위반
   recorded: {'over': 1, 'shape_mismatch': 1}
 ```
 
@@ -202,19 +202,19 @@ violations by kind
 이제 키 없이 세 단계(그대로 / 재주입 / 수선)를 비교하는 연습용 목 모드입니다. 대화 30개짜리 예제 파일입니다.
 
 ```bash
-uv run llm-format-guard eval examples/data/conversations.jsonl --mock
+uv run llm-format-guard --lang ko eval examples/data/conversations.jsonl --mock
 ```
 ```text
-conversations=30 with_constraints=23 detection_rate=1.0 false_detections=0 mode=loose
+대화 수=30 제약 있는 대화=23 탐지율=1.0 오탐=0 모드=loose
 
-compliance (share of conversations with no violation)
-stage     rate
+준수율 (위반이 없는 대화의 비율)
+단계      비율
 raw       0.09
 injected  0.30
 repaired  0.96
 
-compliance by axis
-axis            raw   injected  repaired
+축별 준수율
+축              raw   injected  repaired
 chars           0.00  0.00      1.00
 chars_no_space  0.00  0.00      1.00
 items           0.00  0.00      1.00
@@ -226,15 +226,15 @@ shape_table     0.25  1.00      1.00
 table_rows      0.00  0.00      0.00
 words           0.00  0.00      1.00
 
-violations by kind
+종류별 위반
   raw: {'over': 15, 'shape_mismatch': 6}
   injected: {'over': 16}
   repaired: {'over': 1}
 ```
 
-(실제 출력 맨 위에는 목 모델 안내 `NOTE:` 한 줄이 먼저 나옵니다.)
+(실제 출력 맨 위에는 목 모델 안내 `참고:` 한 줄이 먼저 나옵니다.)
 
-![eval 실행 화면](docs/images/05-eval.png)
+![eval 실행 화면](docs/images/05-eval.ko.png)
 
 *그림 6. 세 단계(그대로 / 재주입 / 수선) 준수율. 목 모델 규칙의 산물이라 실제 모델 실측이 아닙니다.*
 
@@ -302,6 +302,18 @@ print(repr(ledger.render()), len(ledger.active))
 
 "길게 써도 돼" 같은 해제 표현이 나오면 해당 제약이 사라집니다. 같은 축의 새 지시는 옛 지시를 덮어씁니다(최신 우선).
 
+## 출력 언어
+
+명령줄의 사람용 출력(도움말, 표 머리말, `eval` 보고서, 오류 접두어)은 영어와 한국어를 지원합니다. 아래 순서에서 처음 찾은 값이 적용됩니다.
+
+1. `--lang en|ko` (최상위 옵션, 예: `llm-format-guard --lang ko detect "안녕"`)
+2. 환경변수 `LLM_FORMAT_GUARD_LANG`
+3. `LC_ALL`, `LC_MESSAGES`, `LANG` 순
+
+`ko` 로 시작하는 값(`ko_KR.UTF-8` 등)이면 한국어이고, 그 밖의 값이나 빈 값, 설정이 없으면 영어입니다. 텍스트 출력을 grep 하는 스크립트가 있다면 `--lang en` 또는 `LLM_FORMAT_GUARD_LANG=en` 으로 고정하세요.
+
+`--json` 출력(키, 값, 규칙 ID, 종료코드)은 어느 언어에서도 같습니다. 라이브러리 API 와 예외 문장은 번역하지 않으며, `examples/` 의 스크립트는 라이브러리 사용 예제라 번역 대상에서 제외합니다.
+
 ## 설정과 기본 동작
 
 | 항목 | 기본값 | 설명 |
@@ -343,11 +355,11 @@ in_last_user ['system', 'user', 'assistant', 'user']
 ## 버전·호환성
 
 - 유의적 버전(SemVer)을 따릅니다. 0.x 동안은 마이너 버전에서 API 가 바뀔 수 있고, 바뀌면 [CHANGELOG.md](CHANGELOG.md)에 적습니다.
-- 현재 `0.1.2`. 한국어·영어 지시만 읽습니다.
+- 현재 `0.2.0`. 한국어·영어 지시만 읽습니다.
 
 ## 한계와 로드맵
 
-한계(0.1.2):
+한계(0.2.0):
 - 지시 추출은 정규식이라 놓치는 표현이 있습니다. 모호한 표현은 일부러 버립니다("항목 5개"처럼 명사가 붙은 것만 잡고, "첫 3줄만 봐 줘"처럼 자료의 분량을 말한 문장은 제약으로 보지 않습니다).
 - 범위 지시 `3~5줄` 같은 물결표 표기는 상한(5줄 이하)만 읽고 하한은 버립니다. "세 줄 이상 다섯 줄 이하"처럼 풀어 쓴 범위는 하한·상한 두 개로 잡습니다.
 - 줄마다 적용되는 복합 지시("각 줄 30자")는 버립니다.
@@ -356,8 +368,8 @@ in_last_user ['system', 'user', 'assistant', 'user']
 - 목 없이 같은 파일을 직접 쓴 녹화 답변으로 측정하면(`eval` 에서 `--mock` 제외) `recorded 0.48` 이 나왔습니다.
 
 로드맵(예정이며 약속이 아닙니다):
-- 0.2.0: `guard_stream`(스트림 처리), OpenAI 호환 어댑터, 실제 모델 녹화 답변, 선택적 LLM 추출기
-- 0.3.0: 항목별 복합 제약, 범위 지시 `3~5줄`, 제목 개수, PyPI 게시 준비
+- 0.3.0: `guard_stream`(스트림 처리), OpenAI 호환 어댑터, 실제 모델 녹화 답변, 선택적 LLM 추출기
+- 0.4.0: 항목별 복합 제약, 범위 지시 `3~5줄`, 제목 개수
 
 ## 문제 해결
 

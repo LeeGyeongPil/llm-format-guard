@@ -365,11 +365,11 @@ in_last_user ['system', 'user', 'assistant', 'user']
 ## Versions and compatibility
 
 - Follows Semantic Versioning (SemVer). During 0.x the API may change in minor versions, and any change is recorded in [CHANGELOG.md](CHANGELOG.md).
-- Currently `0.2.0`. It reads Korean and English instructions only.
+- Currently `0.2.1`. It reads Korean and English instructions only.
 
 ## Limitations and roadmap
 
-Limitations (0.2.0):
+Limitations (0.2.1):
 - Instruction extraction uses regular expressions, so some phrasings are missed. Ambiguous phrasing is dropped on purpose (only things with a noun attached, like "항목 5개" ("5 items"), are caught; a sentence about the size of the material, like "첫 3줄만 봐 줘" ("just look at the first 3 lines"), is not treated as a constraint).
 - For range instructions written with a tilde, such as `3~5줄` (3-5 lines), only the upper bound (5 lines or fewer) is read and the lower bound is dropped. A range spelled out as "세 줄 이상 다섯 줄 이하" ("at least three and at most five lines") is captured as two bounds, lower and upper.
 - Compound instructions applied per line ("각 줄 30자", "30 characters per line") are dropped.

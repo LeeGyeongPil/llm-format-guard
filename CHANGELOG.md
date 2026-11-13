@@ -3,6 +3,11 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-11-13
+
+### Security
+- Constrain `soupsieve` to `>=4.0` in the development lock file to resolve GHSA-mmhr-3c5m-f64f. `soupsieve` is only a transitive dependency of the optional `kss` extra, and this package never uses CSS selectors, so users were not affected. On Python < 3.11.5 the lock now pins `beautifulsoup4` 4.6.3, which does not use `soupsieve`. Package metadata is unchanged.
+
 ## [0.2.0] - 2026-11-12
 
 ### Added
@@ -45,6 +50,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Fixes before first release: `detect()` ignores the size of the material ("첫 3줄만 봐 줘"), overlap removal is O(n log n) with oversized numbers ignored, `guard()` raises a clear `TypeError` for bad `messages`, ranges in one message keep both bounds, the `SplitterUnavailable` message names a route that works before the PyPI release.
 - README: field table for the eval JSONL input, `position` guide, limits and roadmap.
 
+[0.2.1]: https://github.com/LeeGyeongPil/llm-format-guard/releases/tag/v0.2.1
+[0.2.0]: https://github.com/LeeGyeongPil/llm-format-guard/releases/tag/v0.2.0
 [0.1.2]: https://github.com/LeeGyeongPil/llm-format-guard/releases/tag/v0.1.2
 [0.1.1]: https://github.com/LeeGyeongPil/llm-format-guard/releases/tag/v0.1.1
 [0.1.0]: https://github.com/LeeGyeongPil/llm-format-guard/releases/tag/v0.1.0

@@ -4,7 +4,7 @@
 
 A small Python library that catches LLM answers which ignore the user's format and length instructions ("in three lines", "within 200 characters", "as a table") during a conversation. It extracts the constraints from the chat, re-injects them before the last user message, measures the answer deterministically (Korean and markdown aware), and asks the model to rewrite the answer exactly once, adopting the rewrite only when it is strictly better. Zero runtime dependencies, Python 3.10+. Install: `uv add git+https://github.com/LeeGyeongPil/llm-format-guard`.
 
-![quickstart run screen](docs/images/01-quickstart.png)
+![quickstart run screen](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/01-quickstart.png)
 
 *Figure 1. Output of `examples/quickstart.py`. The model forgot the "in three lines" instruction and answered in 4 lines; the library caught it and fixed it to 3 lines. The model is a practice mock.*
 
@@ -117,7 +117,7 @@ shape_table  eq  1      표로
 
 (The input means "Organize it in 5 items, within 200 characters, and give it as a table".)
 
-![detect run screen](docs/images/02-detect.png)
+![detect run screen](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/02-detect.png)
 
 *Figure 3. Three constraints were extracted from one sentence. `op` is the comparison operator (`le` means "at most").*
 
@@ -141,7 +141,7 @@ table_rows         3
 has_list           True
 ```
 
-![measure run screen](docs/images/03-measure.png)
+![measure run screen](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/03-measure.png)
 
 *Figure 4. The result of code counting the same answer. Code blocks and `<think>` are left out.*
 
@@ -167,7 +167,7 @@ shape_mismatch | 표 형식이 아님, 목표: 마크다운 표
 
 (The Korean messages read: "currently 6 items, target 5 items or fewer" and "not a table format, target: markdown table".)
 
-![check run screen](docs/images/04-check-only.png)
+![check run screen](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/04-check-only.png)
 
 *Figure 5. Six items exceed the limit (`over`), and a list is not a table, so the shape does not match (`shape_mismatch`).*
 
@@ -242,7 +242,7 @@ violations by kind
 
 (At the very top of the real output, a one-line `NOTE:` about the mock model comes first.)
 
-![eval run screen](docs/images/05-eval.png)
+![eval run screen](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/05-eval.png)
 
 *Figure 6. Compliance rate at three stages (as is / re-injected / repaired). It is a product of the mock model's rules, not a measurement of a real model.*
 
@@ -282,7 +282,7 @@ uv run python examples/with_ollama.py
 Set LFG_BASE_URL and LFG_MODEL first (see .env.example). For a no-key demo run examples/quickstart.py instead.
 ```
 
-![screen when run without environment variables](docs/images/06-missing-env.png)
+![screen when run without environment variables](https://raw.githubusercontent.com/LeeGyeongPil/llm-format-guard/main/docs/images/06-missing-env.png)
 
 *Figure 7. This is the intended guidance screen (exit code 1). Calls to a real model have not been verified.*
 
@@ -365,11 +365,11 @@ in_last_user ['system', 'user', 'assistant', 'user']
 ## Versions and compatibility
 
 - Follows Semantic Versioning (SemVer). During 0.x the API may change in minor versions, and any change is recorded in [CHANGELOG.md](CHANGELOG.md).
-- Currently `0.2.1`. It reads Korean and English instructions only.
+- Currently `0.2.2`. It reads Korean and English instructions only.
 
 ## Limitations and roadmap
 
-Limitations (0.2.1):
+Limitations (0.2.2):
 - Instruction extraction uses regular expressions, so some phrasings are missed. Ambiguous phrasing is dropped on purpose (only things with a noun attached, like "항목 5개" ("5 items"), are caught; a sentence about the size of the material, like "첫 3줄만 봐 줘" ("just look at the first 3 lines"), is not treated as a constraint).
 - For range instructions written with a tilde, such as `3~5줄` (3-5 lines), only the upper bound (5 lines or fewer) is read and the lower bound is dropped. A range spelled out as "세 줄 이상 다섯 줄 이하" ("at least three and at most five lines") is captured as two bounds, lower and upper.
 - Compound instructions applied per line ("각 줄 30자", "30 characters per line") are dropped.

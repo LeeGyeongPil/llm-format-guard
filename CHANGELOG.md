@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-11-18
+
+### Fixed
+- README images now render on the PyPI project page: `README.md` (the package long description) links its screenshots by absolute `raw.githubusercontent.com` URLs instead of relative `docs/images/` paths.
+- Release 0.2.x, including the `--lang` option used by every README example, is now published to PyPI (the index previously offered only 0.1.2). No runtime or API change.
+
 ## [0.2.1] - 2026-11-13
 
 ### Security
